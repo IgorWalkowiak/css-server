@@ -1,7 +1,8 @@
 # Counter-Strike: Source 64-bit w Dockerze
 
-Obraz instaluje SteamCMD, serwer CS:S oraz pliki potrzebne do uruchomienia go
-w trybie 64-bitowym. Po uruchomieniu kontenera serwer startuje automatycznie.
+Obraz instaluje SteamCMD, serwer CS:S, MetaMod:Source i SourceMod oraz pliki
+potrzebne do uruchomienia serwera w trybie 64-bitowym. Po uruchomieniu kontenera
+serwer startuje automatycznie.
 
 ## Budowanie
 
@@ -18,9 +19,12 @@ Najprościej uruchomić serwer przez Docker Compose, który publikuje wszystkie
 potrzebne porty:
 
 ```bash
-docker compose up -d
+docker compose up -d --build
 docker compose logs -f
 ```
+
+Compose ma również ustawione `pull_policy: build`, więc przy zwykłym
+`docker compose up -d` sprawdzi build obrazu przed uruchomieniem kontenera.
 
 Zatrzymanie serwera:
 
@@ -38,6 +42,9 @@ W konsoli można wpisywać polecenia SRCDS, na przykład `status` lub
 `meta version`. Aby odłączyć konsolę bez zatrzymywania serwera, należy nacisnąć
 kolejno `Ctrl+P`, a następnie `Ctrl+Q`. Nie należy używać `Ctrl+C`, ponieważ
 zatrzyma ono serwer.
+
+Instalację pluginów można sprawdzić poleceniami `meta version` oraz
+`sm version`.
 
 Alternatywnie można użyć bezpośrednio `docker run`:
 

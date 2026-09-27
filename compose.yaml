@@ -2,6 +2,7 @@ services:
   css-server:
     build: .
     image: css-server
+    pull_policy: build
     restart: unless-stopped
     stdin_open: true
     tty: true

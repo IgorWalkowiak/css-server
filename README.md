@@ -14,6 +14,33 @@ docker build -t css-server .
 
 ## Uruchomienie
 
+Najprościej uruchomić serwer przez Docker Compose, który publikuje wszystkie
+potrzebne porty:
+
+```bash
+docker compose up -d
+docker compose logs -f
+```
+
+Zatrzymanie serwera:
+
+```bash
+docker compose down
+```
+
+Podłączenie do interaktywnej konsoli uruchomionego serwera:
+
+```bash
+docker compose attach css-server
+```
+
+W konsoli można wpisywać polecenia SRCDS, na przykład `status` lub
+`meta version`. Aby odłączyć konsolę bez zatrzymywania serwera, należy nacisnąć
+kolejno `Ctrl+P`, a następnie `Ctrl+Q`. Nie należy używać `Ctrl+C`, ponieważ
+zatrzyma ono serwer.
+
+Alternatywnie można użyć bezpośrednio `docker run`:
+
 ```bash
 docker run --rm -it \
   -p 27015:27015/tcp \
@@ -22,6 +49,29 @@ docker run --rm -it \
   --name css-server \
   css-server
 ```
+
+Samo `EXPOSE` zapisane w obrazie nie publikuje portu. Przy ręcznym uruchamianiu
+konieczne jest podanie co najmniej `-p 27015:27015/udp`.
+
+## Windows i WSL2
+
+Jeśli Docker Engine działa bezpośrednio w WSL2, w konsoli CS:S na Windowsie
+połącz się z adresem WSL, a nie adresem kontenera `172.17.x.x`:
+
+```text
+connect ADRES_WSL:27015
+```
+
+Aktualny adres WSL można sprawdzić wewnątrz WSL poleceniem:
+
+```bash
+hostname -I
+```
+
+Należy użyć pierwszego adresu, zwykle `172.x.x.x`. Adres może zmienić się po
+restarcie WSL. Dla Dockera działającego bezpośrednio w WSL2 ruch UDP może nie
+być przekazywany przez Windowsowy `localhost`, dlatego bezpośredni adres WSL
+jest właściwym wyborem.
 
 Domyślnie serwer uruchamia mapę `de_dust2`, ma 16 slotów, port `27015`
 i tickrate `66`. Ustawienia można zmienić zmiennymi środowiskowymi:

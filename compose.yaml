@@ -1,0 +1,16 @@
+services:
+  css-server:
+    build: .
+    image: css-server
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
+    environment:
+      CSS_MAP: de_dust2
+      CSS_MAXPLAYERS: 16
+      CSS_PORT: 27015
+      CSS_TICKRATE: 66
+    ports:
+      - "27015:27015/tcp"
+      - "27015:27015/udp"
+      - "27020:27020/udp"

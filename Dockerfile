@@ -5,6 +5,7 @@ ARG DEBIAN_FRONTEND=noninteractive
 RUN dpkg --add-architecture i386 \
     && apt-get update \
     && apt-get install --no-install-recommends -y \
+        bzip2 \
         ca-certificates \
         curl \
         lib32gcc-s1 \
@@ -56,5 +57,24 @@ EXPOSE 27015/tcp 27015/udp 27020/udp
 
 WORKDIR /home/steam/css-serverfiles
 COPY --chown=steam:steam config/ cstrike/
+
+RUN for map in \
+        ba_jail_electric_razor_v6 \
+        ba_jail_blackops \
+        ba_jail_canyondam_v6_fix \
+        surf_ski_2 \
+        surf_utopia_v3 \
+        surf_beginner \
+        bhop_badges \
+        bhop_arcane_v1 \
+        bhop_advi; \
+    do \
+        curl -fsSL --retry 3 --retry-all-errors \
+            "https://main.fastdl.me/maps/${map}.bsp.bz2" \
+            -o "/tmp/${map}.bsp.bz2" \
+        && bzip2 -d "/tmp/${map}.bsp.bz2" \
+        && mv "/tmp/${map}.bsp" "cstrike/maps/${map}.bsp" \
+        || exit 1; \
+    done
 
 ENTRYPOINT ["/usr/bin/tini", "--", "/home/steam/docker-entrypoint.sh"]

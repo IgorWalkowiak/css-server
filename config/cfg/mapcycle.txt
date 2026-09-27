@@ -24,3 +24,18 @@ de_inferno
 cs_assault
 de_nuke
 cs_militia
+
+// Jailbreak
+ba_jail_electric_razor_v6
+ba_jail_blackops
+ba_jail_canyondam_v6_fix
+
+// Surf
+surf_ski_2
+surf_utopia_v3
+surf_beginner
+
+// Bunnyhop
+bhop_badges
+bhop_arcane_v1
+bhop_advi

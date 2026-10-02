@@ -13,6 +13,26 @@ build może potrwać kilka minut i wymaga kilku GB wolnego miejsca:
 docker build -t css-server .
 ```
 
+## Obraz z Docker Hub
+
+Workflow `.github/workflows/docker-publish.yml` buduje i publikuje obraz przy
+każdym pushu. Obraz ma nazwę `<użytkownik-dockerhub>/css-server`. Domyślna gałąź
+dostaje tag `latest`; publikowane są też tagi odpowiadające gałęzi lub Git tagowi
+oraz tag `sha-<skrót-commita>`.
+
+W ustawieniach repozytorium GitHub w `Settings` > `Secrets and variables` >
+`Actions` należy dodać dwa repository secrets:
+
+- `DOCKERHUB_USERNAME` - nazwa użytkownika Docker Hub,
+- `DOCKERHUB_TOKEN` - access token Docker Hub z uprawnieniami `Read & Write`.
+
+Na Docker Hub należy wcześniej utworzyć repozytorium o nazwie `css-server`.
+Gotowy obraz można pobrać bez lokalnego budowania:
+
+```bash
+docker pull <użytkownik-dockerhub>/css-server:latest
+```
+
 ## Uruchomienie
 
 Najprościej uruchomić serwer przez Docker Compose, który publikuje wszystkie
@@ -113,3 +133,46 @@ docker run --rm -it \
   -v "$(pwd)/server.cfg:/home/steam/css-serverfiles/cstrike/cfg/server.cfg:ro" \
   css-server
 ```
+
+## Konfiguracja zależna od mapy
+
+Serwer używa pluginu
+[Extended Map Configs](https://github.com/Nekromio/extendedmapconfig), kompilowanego
+podczas budowania obrazu przez kompilator dołączony do SourceMod. Po każdej zmianie
+mapy konfiguracje są wykonywane w kolejności:
+
+1. `cfg/mapconfig/post/general/all.cfg`
+2. `cfg/mapconfig/post/gametype/<prefiks>.cfg`
+3. `cfg/mapconfig/post/maps/<pełna_nazwa_mapy>.cfg`
+
+Prefiks jest częścią nazwy przed pierwszym znakiem `_`. Dlatego mapy `de_*` używają
+`de.cfg`, `surf_*` używają `surf.cfg`, a `ba_jail_*` używają `ba.cfg`.
+
+Wspólne ustawienia trybów znajdują się w `cfg/mapconfig/modes/`. Konfiguracja
+`post/general/all.cfg` najpierw przywraca wartości z `base.cfg`, dzięki czemu np.
+`sv_airaccelerate` z mapy bhop nie pozostaje aktywne na kolejnej mapie klasycznej.
+
+Wyjątek dla pojedynczej mapy można dodać przykładowo jako:
+
+```text
+config/cfg/mapconfig/post/maps/surf_ski_2.cfg
+```
+
+Plugin automatycznie utworzy puste pliki dla map, które nie mają jeszcze własnej
+konfiguracji. Konfiguracje wykonywane przed zmianą mapy znajdują się analogicznie
+w `cfg/mapconfig/pre/`.
+
+Osobne pule map są dostępne w plikach `mapcycle_classic.txt`,
+`mapcycle_jailbreak.txt`, `mapcycle_surf.txt` i `mapcycle_bhop.txt`. Główne
+głosowania nadal korzystają z mieszanego `mapcycle.txt`.
+
+Pluginy wymagane tylko przez konkretny tryb należy trzymać poza głównym katalogiem
+`addons/sourcemod/plugins` i ładować poleceniami `sm plugins load` w konfiguracji
+trybu. Odpowiadające im `sm plugins unload` należy umieścić w
+`cfg/mapconfig/pre/general/all.cfg`. Obecnie repo nie zawiera pluginów jailbreak,
+surf ani bhop, więc nie są wykonywane puste operacje ładowania.
+
+Niestandardowe mapy są pobierane podczas budowania z `main.fastdl.me`. Ten sam
+serwis jest ustawiony w `server.cfg` jako `sv_downloadurl`, aby klient mógł pobrać
+brakującą mapę przy łączeniu. Po zmianie adresu źródła map w `Dockerfile` należy
+również zaktualizować adres FastDL w `server.cfg`.

@@ -1,9 +1,8 @@
-FROM ubuntu:24.04
+FROM debian:bookworm-slim AS builder
 
 ARG DEBIAN_FRONTEND=noninteractive
 
-RUN dpkg --add-architecture i386 \
-    && apt-get update \
+RUN apt-get update \
     && apt-get install --no-install-recommends -y \
         bzip2 \
         ca-certificates \
@@ -11,7 +10,6 @@ RUN dpkg --add-architecture i386 \
         lib32gcc-s1 \
         lib32stdc++6 \
         libc6-i386 \
-        tini \
     && rm -rf /var/lib/apt/lists/* \
     && useradd --create-home --shell /bin/bash steam
 
@@ -31,6 +29,7 @@ ARG METAMOD_VERSION=1.12.0
 ARG METAMOD_BUILD=1227
 ARG SOURCEMOD_VERSION=1.12.0
 ARG SOURCEMOD_BUILD=7253
+ARG EXTENDED_MAPCONFIG_COMMIT=2b0dbf9b2702a5a3e5e918bc75b1502238b74f2c
 
 RUN curl -fsSL --retry 3 \
         "https://github.com/alliedmodders/metamod-source/releases/download/${METAMOD_VERSION}.${METAMOD_BUILD}/mmsource-${METAMOD_VERSION}-git${METAMOD_BUILD}-linux.tar.gz" \
@@ -45,18 +44,16 @@ RUN curl -fsSL --retry 3 \
     && test -f /home/steam/css-serverfiles/cstrike/addons/sourcemod/bin/x64/sourcemod.2.css.so \
     && rm /tmp/metamod.tar.gz /tmp/sourcemod.tar.gz
 
-COPY --chown=steam:steam docker-entrypoint.sh /home/steam/docker-entrypoint.sh
-RUN chmod +x /home/steam/docker-entrypoint.sh
-
-ENV CSS_MAP=de_dust2 \
-    CSS_MAXPLAYERS=16 \
-    CSS_PORT=27015 \
-    CSS_TICKRATE=66
-
-EXPOSE 27015/tcp 27015/udp 27020/udp
-
 WORKDIR /home/steam/css-serverfiles
 COPY --chown=steam:steam config/ cstrike/
+
+RUN curl -fsSL --retry 3 \
+        "https://raw.githubusercontent.com/Nekromio/extendedmapconfig/${EXTENDED_MAPCONFIG_COMMIT}/addons/sourcemod/scripting/extendedmapconfig.sp" \
+        -o cstrike/addons/sourcemod/scripting/extendedmapconfig.sp \
+    && cstrike/addons/sourcemod/scripting/spcomp \
+        cstrike/addons/sourcemod/scripting/extendedmapconfig.sp \
+        -o cstrike/addons/sourcemod/plugins/extendedmapconfig.smx \
+    && rm cstrike/addons/sourcemod/scripting/extendedmapconfig.sp
 
 RUN for map in \
         ba_jail_electric_razor_v6 \
@@ -76,5 +73,32 @@ RUN for map in \
         && mv "/tmp/${map}.bsp" "cstrike/maps/${map}.bsp" \
         || exit 1; \
     done
+
+FROM debian:bookworm-slim
+
+ARG DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update \
+    && apt-get install --no-install-recommends -y \
+        ca-certificates \
+        libstdc++6 \
+        tini \
+    && rm -rf /var/lib/apt/lists/* \
+    && useradd --create-home --shell /bin/bash steam
+
+COPY --from=builder --chown=steam:steam /home/steam/css-serverfiles /home/steam/css-serverfiles
+COPY --from=builder --chown=steam:steam /home/steam/.steam/sdk64/steamclient.so /home/steam/.steam/sdk64/steamclient.so
+COPY --chown=steam:steam docker-entrypoint.sh /home/steam/docker-entrypoint.sh
+RUN chmod +x /home/steam/docker-entrypoint.sh
+
+ENV CSS_MAP=de_dust2 \
+    CSS_MAXPLAYERS=16 \
+    CSS_PORT=27015 \
+    CSS_TICKRATE=66
+
+EXPOSE 27015/tcp 27015/udp 27020/udp
+
+USER steam
+WORKDIR /home/steam/css-serverfiles
 
 ENTRYPOINT ["/usr/bin/tini", "--", "/home/steam/docker-entrypoint.sh"]

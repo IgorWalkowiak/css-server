@@ -149,12 +149,12 @@ setup_steamclient() {
 
     mkdir -p "$HOME/.steam/sdk64"
 
-    ln -sf \
+    cp -L \
         "$steamclient" \
         "$HOME/.steam/sdk64/steamclient.so"
 
     ln -sf \
-        "$steamclient" \
+        "$HOME/.steam/sdk64/steamclient.so" \
         "$CSSDIR/bin/linux64/steamclient.so"
 }
 

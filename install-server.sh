@@ -29,6 +29,37 @@ prepare() {
     echo
 }
 
+install_steam_app() {
+    local app_id="$1"
+    local install_dir="$2"
+    local expected_file="$3"
+    local attempt
+
+    mkdir -p "$install_dir/steamapps"
+
+    for attempt in 1 2 3 4 5; do
+        echo "Próba $attempt/5 instalacji aplikacji $app_id..."
+
+        if "$STEAMCMD" \
+            +@sSteamCmdForcePlatformType linux \
+            +force_install_dir "$install_dir" \
+            +login anonymous \
+            +app_update "$app_id" validate \
+            +quit \
+            && [ -f "$expected_file" ]; then
+            return 0
+        fi
+
+        if [ "$attempt" -lt 5 ]; then
+            echo "SteamCMD nie ukończył instalacji. Ponawiam za 15 sekund..."
+            sleep 15
+        fi
+    done
+
+    echo "BŁĄD: SteamCMD nie zainstalował aplikacji $app_id po 5 próbach."
+    return 1
+}
+
 download_css() {
     echo "=== Pobieranie Counter-Strike: Source ==="
 
@@ -37,11 +68,7 @@ download_css() {
         exit 1
     fi
 
-    "$STEAMCMD" \
-        +force_install_dir "$CSSDIR" \
-        +login anonymous \
-        +app_update 232330 validate \
-        +quit
+    install_steam_app 232330 "$CSSDIR" "$CSSDIR/srcds_run"
 
     echo
     echo "CSS został pobrany."
@@ -55,11 +82,7 @@ download_tf2() {
         return
     fi
 
-    "$STEAMCMD" \
-        +force_install_dir "$TF2DIR" \
-        +login anonymous \
-        +app_update 232250 validate \
-        +quit
+    install_steam_app 232250 "$TF2DIR" "$TF2DIR/srcds_run_64"
 
     echo
     echo "TF2 zostało pobrane."

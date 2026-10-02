@@ -18,7 +18,8 @@ WORKDIR /home/steam
 
 RUN mkdir -p /home/steam/steamcmd \
     && curl -fsSL https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz \
-        | tar -xz -C /home/steam/steamcmd
+        | tar -xz -C /home/steam/steamcmd \
+    && /home/steam/steamcmd/steamcmd.sh +quit
 
 COPY --chown=steam:steam install-server.sh /home/steam/install-server.sh
 RUN chmod +x /home/steam/install-server.sh \

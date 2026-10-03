@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="pl">
+<head>
+    <meta charset="utf-8">
+    <title>Plac Zabaw tylko inny</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 40px;
+            background: #151922;
+            color: #f4f1e8;
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+
+        h1 {
+            margin: 0 0 16px;
+            color: #f5b942;
+            font-size: 34px;
+        }
+
+        p {
+            margin: 0;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Plac Zabaw tylko inny</h1>
+    <p>Witaj na serwerze! Baw się dobrze i szanuj innych graczy.</p>
+</body>
+</html>
